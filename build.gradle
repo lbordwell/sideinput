@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+}
+
+group 'com.lbordwell.example'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+ext {
+    beamVersion = '2.8.0'
+    slf4jVersion = '1.7.25'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.apache.beam:beam-sdks-java-core:${beamVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    runtime "org.apache.beam:beam-runners-direct-java:${beamVersion}"
+    runtime "org.apache.beam:beam-runners-google-cloud-dataflow-java:${beamVersion}"
+    runtime "org.slf4j:slf4j-jdk14:${slf4jVersion}"
+}
+
+task runDirect(dependsOn: 'classes', type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.lbordwell.example.SideinputPipeline'
+    args = ['--runner=DirectRunner']
+}
+
+task(runDataflow, dependsOn: 'classes', type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'com.lbordwell.example.SideinputPipeline'
+    args = [
+        '--runner=DataflowRunner',
+        '--project=<PROJECT_ID>',
+        '--stagingLocation=gs://<STORAGE_BUCKET>/staging',
+        '--tempLocation=gs://<STORAGE_BUCKET>/temp'
+    ]
+}
+
+defaultTasks ('runDirect', 'runDataflow')
